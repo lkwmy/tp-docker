@@ -17,6 +17,7 @@ services:
     environment:
       - USERNAME=toto
       - PASSWORD=python
+      - API_URL=http://api:5000/pozos/api/v1.0/get_student_ages
     volumes:
       - ./website:/var/www/html
     ports:

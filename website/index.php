@@ -1,39 +1,68 @@
+<?php
+// Suppress deprecated warnings
+error_reporting(E_ALL & ~E_DEPRECATED);
 
-<html>
-    <head>
-        <title>POZOS</title>
-    </head>
+$api_url  = getenv('API_URL');
+$username = getenv('USERNAME');
+$password = getenv('PASSWORD');
 
-    <body>
-        <h1>Student Checking App</h1>
-        <ul>
-            <form action="" method="POST">
-            <!--<label>Enter student name:</label><br />
-            <input type="text" name="" placeholder="Student Name" required/>
-            <br /><br />-->
-            <button type="submit" name="submit">List Student</button>
-            </form>
+$students = [];
+$error    = null;
 
-            <?php
-              if($_SERVER['REQUEST_METHOD'] == "POST" and isset($_POST['submit']))
-              {
-              $username = getenv('USERNAME');
-              $password = getenv('PASSWORD');
-              if ( empty($username) ) $username = 'fake_username';
-              if ( empty($password) ) $password = 'fake_password';
-              $context = stream_context_create(array(
-                "http" => array(
-                "header" => "Authorization: Basic " . base64_encode("$username:$password"),
-              )));
+if (isset($_POST['load'])) {
+    $ch = curl_init($api_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
+    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 
-              $url = 'http://<api_ip_or_name:port>/pozos/api/v1.0/get_student_ages';
-              $list = json_decode(file_get_contents($url, false, $context), true);
-              echo "<p style='color:red;; font-size: 20px;'>This is the list of the student with age</p>";
-              foreach($list["student_ages"] as $key => $value) {
-                  echo "- $key is $value years old <br>";
-              }
-             }
-            ?>
-        </ul>
-    </body>
+    $response  = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if ($http_code === 200) {
+        $data     = json_decode($response, true);
+        $students = $data['students'];
+    } else {
+        $error = "API returned HTTP $http_code";
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>POZOS - Student List</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        h1   { color: #2c3e50; }
+        button { padding: 10px 20px; background: #2c3e50; color: white; border: none; cursor: pointer; font-size: 15px; border-radius: 4px; margin-bottom: 20px; }
+        button:hover { background: #3d5166; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 16px; border: 1px solid #ccc; text-align: left; }
+        th   { background-color: #2c3e50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>POZOS - Student List</h1>
+
+    <form method="POST">
+        <button type="submit" name="load">List Students</button>
+    </form>
+
+    <?php if ($error): ?>
+        <p class="error">Error: <?= htmlspecialchars($error) ?></p>
+    <?php elseif (!empty($students)): ?>
+        <table>
+            <tr><th>Name</th><th>Age</th></tr>
+            <?php foreach ($students as $s): ?>
+                <tr>
+                    <td><?= htmlspecialchars($s['name']) ?></td>
+                    <td><?= htmlspecialchars($s['age']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php endif; ?>
+
+</body>
 </html>
