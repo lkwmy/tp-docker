@@ -42,13 +42,14 @@ Les deux conteneurs communiquent via un **réseau Docker Compose interne**, sans
 ```
 tp-docker/
 │
-├── 🐳 docker-compose.yml      # Orchestration des services
-├── 🐍 student_age.py          # API Flask principale
+├── 🐳 docker-compose.yml      # Orchestration des deux services
+├── 🐍 student_age.py          # API Flask (endpoint GET /pozos/api/v1.0/get_student_ages)
+├── 📊 student_age.json        # Données des étudiants (monté en volume dans /data)
 ├── 📦 requirements.txt        # Dépendances Python
 ├── 📄 Dockerfile              # Image du conteneur API
+├── 🌐 index.php               # Frontend PHP (appel API + affichage tableau)
 │
-└── 📁 website/
-    └── ...                    # Sources PHP / Apache
+└── 📁 website/                # Fichiers servis par Apache
 ```
 
 ---
